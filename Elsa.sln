@@ -130,6 +130,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docker", "docker", "{986E54
 		docker\docker-compose.yml = docker\docker-compose.yml
 		docker\docker-compose-datadog.yml = docker\docker-compose-datadog.yml
 		docker\ElsaServer-Datadog.Dockerfile = docker\ElsaServer-Datadog.Dockerfile
+		docker\eca-docker-compose.yml = docker\eca-docker-compose.yml
+		docker\EcaStudio.Dockerfile = docker\EcaStudio.Dockerfile
+		docker\EcaServer.Dockerfile = docker\EcaServer.Dockerfile
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Elsa.Samples.AspNet.RunTaskIntegration", "samples\aspnet\Elsa.Samples.AspNet.RunTaskIntegration\Elsa.Samples.AspNet.RunTaskIntegration.csproj", "{51050209-EC2F-4DC7-8F46-07E22B7811CD}"
@@ -354,6 +357,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elsa.Workflows.PerformanceTests", "test\performance\Elsa.Workflows.PerformanceTests\Elsa.Workflows.PerformanceTests.csproj", "{90CD37A9-C866-4D90-A3B1-8C87F53B845E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elsa.MongoDb.UnitTests", "test\unit\Elsa.MongoDb.UnitTests\Elsa.MongoDb.UnitTests.csproj", "{56CAA9F2-1882-4EFA-BAC0-9C3D804553F1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eca.Server", "src\bundles\Eca.Server\Eca.Server.csproj", "{45473452-3F0F-44C9-98A1-355EFF07E00F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Eca.Studio", "src\bundles\Eca.Studio\Eca.Studio.csproj", "{C964D12F-899D-4C62-9519-9CF6A18F5439}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -844,6 +851,14 @@ Global
 		{56CAA9F2-1882-4EFA-BAC0-9C3D804553F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{56CAA9F2-1882-4EFA-BAC0-9C3D804553F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{56CAA9F2-1882-4EFA-BAC0-9C3D804553F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45473452-3F0F-44C9-98A1-355EFF07E00F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45473452-3F0F-44C9-98A1-355EFF07E00F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45473452-3F0F-44C9-98A1-355EFF07E00F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45473452-3F0F-44C9-98A1-355EFF07E00F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C964D12F-899D-4C62-9519-9CF6A18F5439}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C964D12F-899D-4C62-9519-9CF6A18F5439}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C964D12F-899D-4C62-9519-9CF6A18F5439}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C964D12F-899D-4C62-9519-9CF6A18F5439}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -991,6 +1006,8 @@ Global
 		{CBB515F3-A0EF-43B5-A907-FD4E652DD66E} = {90031D64-CA0F-46D0-9AF4-8DC023A5FFCD}
 		{90CD37A9-C866-4D90-A3B1-8C87F53B845E} = {CBB515F3-A0EF-43B5-A907-FD4E652DD66E}
 		{56CAA9F2-1882-4EFA-BAC0-9C3D804553F1} = {18453B51-25EB-4317-A4B3-B10518252E92}
+		{45473452-3F0F-44C9-98A1-355EFF07E00F} = {F06B9573-DF68-4606-866C-A7546A10A05A}
+		{C964D12F-899D-4C62-9519-9CF6A18F5439} = {F06B9573-DF68-4606-866C-A7546A10A05A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D4B5CEAA-7D70-4FCB-A68E-B03FBE5E0E5E}

@@ -1,0 +1,63 @@
+﻿services:
+  postgres:
+    image: postgres:latest
+    command: -c 'max_connections=2000'
+    environment:
+      POSTGRES_USER: elsa
+      POSTGRES_PASSWORD: elsa
+      POSTGRES_DB: elsa
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh  # This will initialize the 'tracelens' database
+    ports:
+      - "5432:5432"
+  pgadmin4:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "marius.onofrei@eca-international.com"
+      PGADMIN_DEFAULT_PASSWORD: SuperSecret
+      POSTGRES_USER: elsa
+      POSTGRES_PASSWORD: elsa
+      POSTGRES_DB: elsa
+    ports:
+      - "5433:80"
+
+  mock-api:
+    image: wiremock/wiremock:3.9.1
+    ports:
+      - 8088:8080
+    volumes:
+      - ../wiremock/__files:/home/wiremock/__files
+      - ../wiremock/mappings:/home/wiremock/mappings
+
+  elsa-server:
+    build:
+      context: ../.
+      dockerfile: ./docker/EcaServer.Dockerfile
+    depends_on:
+      - postgres
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      PYTHONNET_PYDLL: /opt/homebrew/Cellar/python@3.11/3.11.6_1/Frameworks/Python.framework/Versions/3.11/bin/python3.11
+      PYTHONNET_RUNTIME: coreclr
+      CONNECTIONSTRINGS__POSTGRESQL: "Server=postgres;Username=elsa;Database=elsa;Port=5432;Password=elsa;SSLMode=Prefer;MaxPoolSize=2000;Timeout=60"
+      DISTRIBUTEDLOCKPROVIDER: "Postgres"
+    ports:
+      - "5168:8080"
+  
+  elsa-studio:
+    build:
+      context: ../
+      dockerfile: ./docker/EcaStudio.Dockerfile
+    depends_on:
+      - elsa-server
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      BACKEND__URL: "http://elsa-server:8080/elsa/api"
+    ports:
+      - "5239:80"
+
+volumes:
+  postgres-data:
+  cockroachdb-data:
+  mongodb_data:
