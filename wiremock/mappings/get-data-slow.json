@@ -1,0 +1,20 @@
+{
+  "request": {
+    "urlPath": "/data",
+    "method": "GET",
+    "queryParameters" : {
+      "slow" : {
+        "equalTo" : "true"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "transformers": ["response-template"],
+    "fixedDelayMilliseconds": 15000,
+    "body": "{ \"payload\": {{request.query.payload}} }",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "request": {
+    "urlPath": "/data",
+    "method": "GET",
+    "queryParameters" : {
+      "slow" : {
+        "or": [{
+          "absent": true
+        },
+        {
+          "equalTo": "false"
+        }]
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "transformers": ["response-template"],
+    "body": "{ \"payload\": {{request.query.payload}} }",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
