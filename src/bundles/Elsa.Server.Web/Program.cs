@@ -36,17 +36,17 @@ using Proto.Persistence.SqlServer;
 
 const bool useMongoDb = false;
 const bool useSqlServer = false;
-const bool usePostgres = false;
+const bool usePostgres = true;
 const bool useCockroachDb = false;
 const bool useDapper = false;
 const bool useProtoActor = false;
 const bool useHangfire = false;
 const bool useQuartz = false;
-const bool useMassTransit = true;
+const bool useMassTransit = false;
 const bool useZipCompression = false;
 const bool runEFCoreMigrations = true;
 const bool useMemoryStores = false;
-const bool useCaching = true;
+const bool useCaching = false;
 const bool useReadOnlyMode = false;
 const bool useSignalR = true;
 const bool useAzureServiceBus = false;
@@ -73,31 +73,6 @@ var appRole = Enum.Parse<ApplicationRole>(configuration["AppRole"]);
 services
     .AddElsa(elsa =>
     {
-        if (useMongoDb)
-            elsa.UseMongoDb(mongoDbConnectionString);
-
-        if (useDapper)
-            elsa.UseDapper(dapper =>
-            {
-                dapper.UseMigrations(feature =>
-                {
-                    if (useSqlServer)
-                        feature.UseSqlServer();
-                    else
-                        feature.UseSqlite();
-                });
-                dapper.DbConnectionProvider = sp =>
-                {
-                    if (useSqlServer)
-                        return new SqlServerDbConnectionProvider(sqlServerConnectionString!);
-                    else
-                        return new SqliteDbConnectionProvider(sqliteConnectionString);
-                };
-            });
-
-        if (useHangfire)
-            elsa.UseHangfire();
-
         elsa
             .AddActivitiesFrom<Program>()
             .AddWorkflowsFrom<Program>()
@@ -105,22 +80,9 @@ services
             .UseFileStorage()
             .UseIdentity(identity =>
             {
-                if (useMongoDb)
-                    identity.UseMongoDb();
-                else if (useDapper)
-                    identity.UseDapper();
-                else
                     identity.UseEntityFrameworkCore(ef =>
                     {
-                        if (useSqlServer)
-                            ef.UseSqlServer(sqlServerConnectionString!);
-                        else if (usePostgres)
-                            ef.UsePostgreSql(postgresConnectionString!);
-                        else if (useCockroachDb)
-                            ef.UsePostgreSql(cockroachDbConnectionString!);
-                        else
-                            ef.UseSqlite(sqliteConnectionString);
-
+                        ef.UsePostgreSql(postgresConnectionString);
                         ef.RunMigrations = runEFCoreMigrations;
                     });
 
@@ -133,87 +95,26 @@ services
             .UseDefaultAuthentication()
             .UseWorkflowManagement(management =>
             {
-                if (useMongoDb)
-                    management.UseMongoDb();
-                else if (useDapper)
-                    management.UseDapper();
-                else
                     management.UseEntityFrameworkCore(ef =>
                     {
-                        if (useSqlServer)
-                            ef.UseSqlServer(sqlServerConnectionString!);
-                        else if (usePostgres)
-                            ef.UsePostgreSql(postgresConnectionString!);
-                        else if (useCockroachDb)
-                            ef.UsePostgreSql(cockroachDbConnectionString!);
-                        else
-                            ef.UseSqlite(sqliteConnectionString);
-
+                        ef.UsePostgreSql(postgresConnectionString);
                         ef.RunMigrations = runEFCoreMigrations;
                     });
-
-                if (useZipCompression)
-                    management.SetCompressionAlgorithm(nameof(Zstd));
-
-                if (useMemoryStores)
-                    management.UseWorkflowInstances(feature => feature.WorkflowInstanceStore = sp => sp.GetRequiredService<MemoryWorkflowInstanceStore>());
-
-                if (useMassTransit)
-                    management.UseMassTransitDispatcher();
-
-                if (useCaching)
-                    management.UseCache();
 
                 management.SetDefaultLogPersistenceMode(LogPersistenceMode.Inherit);
                 management.UseReadOnlyMode(useReadOnlyMode);
             })
             .UseWorkflowRuntime(runtime =>
             {
-                if (useMongoDb)
-                    runtime.UseMongoDb();
-                else if (useDapper)
-                    runtime.UseDapper();
-                else
                     runtime.UseEntityFrameworkCore(ef =>
-                    {
-                        if (useSqlServer)
-                            ef.UseSqlServer(sqlServerConnectionString!);
-                        else if (usePostgres)
-                            ef.UsePostgreSql(postgresConnectionString!);
-                        else if (useCockroachDb)
-                            ef.UsePostgreSql(cockroachDbConnectionString!);
-                        else
-                            ef.UseSqlite(sqliteConnectionString);
-
+                    { 
+                        ef.UsePostgreSql(postgresConnectionString);
                         ef.RunMigrations = runEFCoreMigrations;
                     });
-
-                if (useProtoActor)
-                {
-                    runtime.UseProtoActor(proto => proto.PersistenceProvider = _ =>
-                    {
-                        if (useSqlServer)
-                            return new SqlServerProvider(sqlServerConnectionString!, true, "", "proto_actor");
-                        else
-                            return new SqliteProvider(new SqliteConnectionStringBuilder(sqliteConnectionString));
-                    });
-                }
-
-                if (useMassTransit)
-                    runtime.UseMassTransitDispatcher();
+                
 
                 runtime.WorkflowInboxCleanupOptions = options => configuration.GetSection("Runtime:WorkflowInboxCleanup").Bind(options);
                 runtime.WorkflowDispatcherOptions = options => configuration.GetSection("Runtime:WorkflowDispatcher").Bind(options);
-
-                if (useMemoryStores)
-                {
-                    runtime.ActivityExecutionLogStore = sp => sp.GetRequiredService<MemoryActivityExecutionStore>();
-                    runtime.WorkflowExecutionLogStore = sp => sp.GetRequiredService<MemoryWorkflowExecutionLogStore>();
-                    runtime.WorkflowInboxStore = sp => sp.GetRequiredService<MemoryWorkflowInboxMessageStore>();
-                }
-
-                if (useCaching)
-                    runtime.UseCache();
 
                 runtime.DistributedLockProvider = _ =>
                 {
@@ -240,14 +141,7 @@ services
                 };
             })
             .UseEnvironments(environments => environments.EnvironmentsOptions = options => configuration.GetSection("Environments").Bind(options))
-            .UseScheduling(scheduling =>
-            {
-                if (useHangfire)
-                    scheduling.UseHangfireScheduler();
-
-                if (useQuartz)
-                    scheduling.UseQuartzScheduler();
-            })
+            .UseScheduling()
             .UseWorkflowsApi(api =>
             {
                 api.AddFastEndpointsAssembly<Program>();
@@ -286,81 +180,17 @@ services
             .UseEmail(email => email.ConfigureOptions = options => configuration.GetSection("Smtp").Bind(options))
             .UseAlterations(alterations =>
             {
-                if (useMongoDb)
-                {
-                    alterations.UseMongoDb();
-                }
-                else if (useDapper)
-                {
-                    // TODO: alterations.UseDapper();
-                }
-                else
-                {
-                    alterations.UseEntityFrameworkCore(ef =>
-                    {
-                        if (useSqlServer)
-                            ef.UseSqlServer(sqlServerConnectionString);
-                        else if (usePostgres)
-                            ef.UsePostgreSql(postgresConnectionString);
-                        else if (useCockroachDb)
-                            ef.UsePostgreSql(cockroachDbConnectionString!);
-                        else
-                            ef.UseSqlite(sqliteConnectionString);
-
-                        ef.RunMigrations = runEFCoreMigrations;
-                    });
-                }
-
-                if (useMassTransit)
-                {
-                    alterations.UseMassTransitDispatcher();
-                }
+                alterations.UseEntityFrameworkCore(ef =>
+                { 
+                    ef.UsePostgreSql(postgresConnectionString);
+                    ef.RunMigrations = runEFCoreMigrations;
+                });
             })
             .UseWorkflowContexts();
-
-        if (useQuartz)
-        {
-            elsa.UseQuartz(quartz => { quartz.UseSqlite(sqliteConnectionString); });
-        }
 
         if (useSignalR)
         {
             elsa.UseRealTimeWorkflows();
-        }
-
-        if (useAzureServiceBus)
-            elsa.UseAzureServiceBus(asb => asb.AzureServiceBusOptions += options => configuration.GetSection("AzureServiceBus").Bind(options));
-
-        if (useMassTransit)
-        {
-            elsa.UseMassTransit(massTransit =>
-            {
-                massTransit.DisableConsumers = appRole == ApplicationRole.Api;
-
-                if (useMassTransitBroker == MassTransitBroker.AzureServiceBus)
-                {
-                    massTransit.UseAzureServiceBus(azureServiceBusConnectionString, serviceBusFeature => serviceBusFeature.ConfigureServiceBus = bus =>
-                    {
-                        bus.PrefetchCount = 100;
-                        bus.LockDuration = TimeSpan.FromMinutes(5);
-                        bus.MaxConcurrentCalls = 32;
-                        bus.MaxDeliveryCount = 8;
-                        // etc.
-                    });
-                }
-
-                if (useMassTransitBroker == MassTransitBroker.RabbitMq)
-                {
-                    massTransit.UseRabbitMq(rabbitMqConnectionString, rabbit => rabbit.ConfigureServiceBus = bus =>
-                    {
-                        bus.PrefetchCount = 4;
-                        bus.Durable = true;
-                        bus.AutoDelete = false;
-                        bus.ConcurrentMessageLimit = 32;
-                        // etc.
-                    });
-                }
-            });
         }
 
         if (distributedCachingTransport != DistributedCachingTransport.None)
@@ -374,6 +204,7 @@ services
         elsa.InstallDropIns(options => options.DropInRootDirectory = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "DropIns"));
         elsa.AddSwagger();
         elsa.AddFastEndpointsAssembly<Program>();
+        elsa.UseWebhooks(webhooks => webhooks.WebhookOptions = options => builder.Configuration.GetSection("Webhooks").Bind(options));
         ConfigureForTest?.Invoke(elsa);
     });
 
